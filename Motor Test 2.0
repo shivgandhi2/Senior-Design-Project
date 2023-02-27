@@ -5,12 +5,18 @@
 // Define pin connections
 const int dirPin = 2;
 const int stepPin = 3;
+const int dirPin1 = 4;
+const int stepPin1 = 5;
 
 // Define motor interface type
 #define motorInterfaceType 1
 
 // Creates an instance
 AccelStepper myStepper(motorInterfaceType, stepPin, dirPin);
+AccelStepper myStepper1(motorInterfaceType, stepPin1, dirPin1);
+
+int pos1 = 3600;
+int pos2 = 5678;
 
 void setup() {
   // set the maximum speed, acceleration factor,
@@ -18,19 +24,41 @@ void setup() {
   myStepper.setMaxSpeed(1000);
   myStepper.setAcceleration(50);
   myStepper.setSpeed(200);
-  myStepper.moveTo(100);
-  
+  //myStepper.moveTo(100);
+
+  myStepper1.setMaxSpeed(1000);
+  myStepper1.setAcceleration(50);
+  myStepper1.setSpeed(200);
+  //myStepper1.moveTo(-100);
+
 }
 
 void loop() {
   // Change direction once the motor reaches target position
   if (myStepper.distanceToGo() == 0)
-  {   
+    {
+      pos1 = -pos1;
+      myStepper.moveTo(pos1);
+    }
+    if (myStepper1.distanceToGo() == 0)
+    {
+      pos2 = -pos2;
+      myStepper1=.moveTo(pos2);
+    }
+  /*
+    if (myStepper.distanceToGo() == 0)
+    {
     myStepper.moveTo(-myStepper.currentPosition());
-  }
- 
-  
+    }
+
+    if (myStepper1.distanceToGo() == 0)
+    {
+    myStepper1.moveTo(-myStepper.currentPosition());
+    }
+  */
+
 
   // Move the motor one step
-   myStepper.run();
+  myStepper.run();
+  myStepper1.run();
 }
