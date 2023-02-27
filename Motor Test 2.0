@@ -39,12 +39,20 @@ void loop() {
     {
       pos1 = -pos1;
       myStepper.moveTo(pos1);
+    }else if (myStepper.distanceToGo() == pos1)
+    {
+      myStepper.moveTo(0);
     }
+    
     if (myStepper1.distanceToGo() == 0)
     {
       pos2 = -pos2;
-      myStepper1=.moveTo(pos2);
+      myStepper1.moveTo(pos2);
+    }else if (myStepper1.distanceToGo() == pos2)
+    {
+      myStepper.moveTo(0);
     }
+    
   /*
     if (myStepper.distanceToGo() == 0)
     {
