@@ -87,17 +87,17 @@ void calibrate(){
         dirUp();
         //now check if limit switch is on to see if we need to switch to moving right
         if(digitalRead(limitY) == HIGH){
-          calStep =2;
+          dirRight();
+          if(digitalRead(limitX) == HIGH){
+            calStep = 3;
+            }
         }
       }
 
-      if(calStep == 2){
-        dirRight();
+ 
         //now check if limit switch is on
-        if(digitalRead(limitX) == HIGH){
-          calStep = 3;
-        }
-      }
+       
+      
 
     myStepper.run();
     myStepper1.run();
