@@ -14,29 +14,31 @@ const int limitY = 7;
 // Define motor interface type
 #define motorInterfaceType 1
 
-// Creates an instance
-AccelStepper myStepper(motorInterfaceType, stepPin, dirPin);
+// Creates an instance of motor objects
+AccelStepper myStepper0(motorInterfaceType, stepPin, dirPin);
 AccelStepper myStepper1(motorInterfaceType, stepPin1, dirPin1);
 
-int moveAmount = 50;
+//setup global variables
+int maxVelocity = 500;
+int velocity = 250;
+int acceleration = 100;
+int inf = 9999;
+
 
 void setup() {
-  //setup serial monitor for testing
-  Serial.begin(9600);
-
-
-  myStepper.setMaxSpeed(500);
-  myStepper.setAcceleration(250);
-  myStepper.setSpeed(500);
-
-
-  myStepper1.setMaxSpeed(500);
-  myStepper1.setAcceleration(250);
-  myStepper1.setSpeed(500);
 
   pinMode(limitX, INPUT);
   pinMode(limitY, INPUT);
-  
+
+  //myStepper0.moveTo(inf);
+  myStepper0.setMaxSpeed(maxVelocity);
+  myStepper0.setSpeed(velocity);
+  myStepper0.setAcceleration(acceleration);
+
+  //myStepper1.moveTo(inf);
+  myStepper1.setMaxSpeed(maxVelocity);
+  myStepper1.setSpeed(velocity);
+  myStepper1.setAcceleration(acceleration);
 
 }
 
@@ -45,68 +47,38 @@ void loop() {
 }
 
 
-//Move right 
-void dirRight(){
-  myStepper.move(moveAmount);
-  myStepper1.move(moveAmount);
-}
 
-//Move up
-void dirUp(){
-  myStepper.move(-moveAmount);
-  myStepper1.move(moveAmount);
-}
+void calibrate() {
 
-//Move Down
-void dirDown(){
-  myStepper.move(moveAmount);
-  myStepper1.move(-moveAmount);
-}
 
-//Move Left
-void dirLeft(){
-  myStepper.move(-moveAmount);
-  myStepper1.move(-moveAmount);
-}
+  //run motors until limitY is reached
+  while (digitalRead(limitY) == LOW && digitalRead(limitX) == LOW) {
+    //set motors move location
+    myStepper0.moveTo(inf);
+    myStepper1.moveTo(-inf);
 
-//complete movement
-void completeMovement(){
-  while (myStepper.distanceToGo() != 0 && myStepper1.distanceToGo() != 0){
-      myStepper.run();
-      myStepper1.run();
+    //set motors to move upwards up direction
+    myStepper0.setSpeed(velocity);
+    myStepper1.setSpeed(-velocity);
+
+
+    myStepper0.runSpeed();
+    myStepper1.runSpeed();
+  }
+
+  //run motors until limitX is reached
+  while (digitalRead(limitX) == LOW && digitalRead(limitY) == HIGH) {
+    //set motors move location
+    myStepper0.moveTo(inf);
+    myStepper1.moveTo(inf);
+
+    //set motors to move upwards up direction
+    myStepper0.setSpeed(velocity);
+    myStepper1.setSpeed(velocity);
+
+    myStepper0.runSpeed();
+    myStepper1.runSpeed();
   }
 }
 
 
-
-
-void calibrate(){
-  if(digitalRead(limitY) == LOW && digitalRead(limitX) == LOW){
-  //move up until we hit limitY
-  calibrateY();
-  }
-
-  if(digitalRead(limitY) == HIGH && digitalRead(limitX) == LOW){
-  //move Right until we hit limitX
-  calibrateX();
-  }
-  
-}
-
-
-
-void calibrateY(){
-  while(digitalRead(limitY) == LOW){
-    dirUp();
-    completeMovement();
-  }
-  return;
-}
-
-void calibrateX(){
-  while(digitalRead(limitX) == LOW){
-    dirRight();
-    completeMovement();
-  }
-  return;
-}
