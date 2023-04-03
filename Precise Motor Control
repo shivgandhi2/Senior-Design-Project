@@ -1,0 +1,139 @@
+#include <AccelStepper.h>
+#include <MultiStepper.h>
+
+
+// Define pin connections
+const int dirPin = 2;
+const int stepPin = 3;
+const int dirPin1 = 4;
+const int stepPin1 = 5;
+
+const int limitX = 6;
+const int limitY = 7;
+
+const int LED = 8;
+
+// Define motor interface type
+#define motorInterfaceType 1
+
+// Creates an instance of motor objects
+AccelStepper myStepper0(motorInterfaceType, stepPin, dirPin);
+AccelStepper myStepper1(motorInterfaceType, stepPin1, dirPin1);
+
+//setup global variables
+int maxVelocity = 500;
+int velocity = 250;
+int acceleration = 100;
+int inf = 9999;
+
+
+void setup() {
+
+  Serial.begin(9600);
+
+  pinMode(limitX, INPUT);
+  pinMode(limitY, INPUT);
+  pinMode(LED, OUTPUT);
+
+
+  //myStepper0.moveTo(inf);
+  myStepper0.setMaxSpeed(maxVelocity);
+  myStepper0.setSpeed(velocity);
+  myStepper0.setAcceleration(acceleration);
+
+  //myStepper1.moveTo(inf);
+  myStepper1.setMaxSpeed(maxVelocity);
+  myStepper1.setSpeed(velocity);
+  myStepper1.setAcceleration(acceleration);
+
+
+}
+
+void loop() {
+  delay(1000);
+  digitalWrite(LED, HIGH);
+  calibrate();
+  
+  delay(1000);
+  digitalWrite(LED, LOW);
+
+  //1600 is max in X-dir
+  //1800 is max in Y-dir
+  pieceMovement(1600, 1800);
+}
+
+
+void calibrate() {
+  //run motors until limitY is reached
+  while (digitalRead(limitY) == LOW && digitalRead(limitX) == LOW) {
+    //set motors move location
+    myStepper0.moveTo(inf);
+    myStepper1.moveTo(-inf);
+
+    //set motors to move upwards up direction
+    myStepper0.setSpeed(velocity);
+    myStepper1.setSpeed(-velocity);
+
+    myStepper0.runSpeed();
+    myStepper1.runSpeed();
+  }
+
+  delay(10);
+
+  //run motors until limitX is reached
+  while (digitalRead(limitX) == LOW && digitalRead(limitY) == HIGH) {
+    //set motors move location
+    myStepper0.moveTo(inf);
+    myStepper1.moveTo(inf);
+
+    //set motors to move upwards up direction
+    myStepper0.setSpeed(velocity);
+    myStepper1.setSpeed(velocity);
+
+    myStepper0.runSpeed();
+    myStepper1.runSpeed();
+  }
+
+  //set current position as the zero spot
+  myStepper0.setCurrentPosition(0);
+  myStepper1.setCurrentPosition(0);
+}
+
+
+void pieceMovement(int x1, int y1){
+  //Assume calibrate was alredy called
+  //We only need to move down and left
+
+  //begin with downwards
+  myStepper0.moveTo(-y1);
+  myStepper1.moveTo(y1);
+
+  //set motors to move right direction
+  myStepper0.setSpeed(-velocity);
+  myStepper1.setSpeed(velocity);
+
+  //complete the movement
+  while(myStepper0.distanceToGo() != 0 && myStepper1.distanceToGo() != 0){
+    myStepper0.runSpeed();
+    myStepper1.runSpeed();   
+  }
+
+  //set current position as the zero spot
+  myStepper0.setCurrentPosition(0);
+  myStepper1.setCurrentPosition(0);
+
+  //now go left
+  myStepper0.moveTo(-x1);
+  myStepper1.moveTo(-x1);
+
+
+  //set motors to move left direction
+  myStepper0.setSpeed(-velocity);
+  myStepper1.setSpeed(-velocity);
+
+  //complete the movement
+  while(myStepper0.distanceToGo() != 0 && myStepper1.distanceToGo() != 0){
+    myStepper0.runSpeed();
+    myStepper1.runSpeed();   
+  }
+}
