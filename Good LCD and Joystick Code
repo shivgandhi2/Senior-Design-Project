@@ -1,0 +1,85 @@
+#include <LiquidCrystal.h>
+#include <OneWire.h> //downloaded
+#include <DallasTemperature.h> //downloaded
+
+///////////////////////////////////////
+#define ONE_WIRE_BUS 2 //DALLAS WIRE TEMP
+#define joyY A0
+#define SWITCH 7 //Switch
+///////////////////////////////////////
+
+OneWire oneWire(ONE_WIRE_BUS);
+DallasTemperature sensors(&oneWire);
+
+
+// initialize the library by associating any needed LCD interface pin
+// with the Arduino pin number it is connected to
+const int rs = 12, en = 11, d4 = 5, d5 = 4, d6 = 3, d7 = 2;
+LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
+int yValue;
+
+
+void setup() {
+  Serial.begin(9600);
+  sensors.begin(); // IC Default 9 bit. If you have troubles consider upping it 12. Ups the delay giving the IC more time to process the temperature measurement
+   // set up the LCD's number of columns and rows:
+  lcd.begin(16, 2);
+  // Print a message to the LCD.
+  lcd.print("SHOCK CHESS");
+  delay(4000);
+  lcd.clear();
+}
+
+void loop() {
+  char selected[14] = "";
+  lcd.setCursor(0,0);
+  lcd.print("Game Mode:");
+  yValue = analogRead(joyY);
+  lcd.setCursor(0,1);
+  if (yValue > 510)
+  {
+    lcd.print("Training Mode");
+    delay(2000);
+    // add button press logic to select mode
+    strcat(selected,"Training Mode");
+  }else if (yValue == 0)
+  {
+    lcd.print("Vs. CPU");
+    strcat(selected,"You vs. CPU");
+    delay(2000);
+  }else
+  {
+    lcd.print("Not Selected");
+  }
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print(selected);
+
+  delay(500);
+  lcd.clear();
+
+  
+
+// //LCD///////////////////
+//// Turn off the display:
+//  lcd.noDisplay();
+//  delay(500);
+//  // Turn on the display:
+//  lcd.display();
+//  delay(500);
+///////////////////////////////
+//
+////TEMP SENSOR////////////////////////
+//// call sensors.requestTemperatures() to issue a global temperature
+//// request to all devices on the bus
+//Serial.print("Requesting temperatures...");
+//sensors.requestTemperatures(); // Send the command to get temperatures
+//Serial.println("DONE");
+//Serial.print("Temperature for Device 1 is: ");
+//Serial.print(sensors.getTempCByIndex(0)); // Why "byIndex"? You can have more than one IC on the same bus. 0 refers to the first IC on the wire
+//////////////////////////////////////////////////
+
+
+
+  
+}
