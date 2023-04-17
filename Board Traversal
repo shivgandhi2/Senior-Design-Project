@@ -15,6 +15,8 @@ const int LED = 8;
 const int magnet = 9;
 
 
+
+
 // Define motor interface type
 #define motorInterfaceType 1
 
@@ -22,11 +24,33 @@ const int magnet = 9;
 AccelStepper myStepper0(motorInterfaceType, stepPin, dirPin);
 AccelStepper myStepper1(motorInterfaceType, stepPin1, dirPin1);
 
-//setup global variables
+//motor global variables
 int maxVelocity = 1000;
 int velocity = 500;
 int acceleration = 100;
 int inf = 9999;
+
+//Board global variables
+  //H8: 265, 315
+  //A1: 1415, 1500
+int pos_H8[] = {265, 315};  //corner 1
+int pos_A1[] = {1415, 1500};  //corner 2
+int board_size = pos_H8[0] - pos_A1[0];
+int tile_size = board_size / 7;
+int boundary_offset = tile_size / 2;
+int taken_pieces_w = 0;
+int taken_pices_b = 0;
+
+//game array
+int game1[] = {
+    52, 54,
+    57, 55,
+    61, 34,
+    28, 36,
+    41, 85,
+    78, 66,
+    185, 167
+}
 
 
 void setup() {
@@ -52,8 +76,6 @@ void setup() {
 }
 
 void loop() {
-  digitalWrite(magnet, HIGH);
-  
   delay(100);
   digitalWrite(LED, HIGH);
   calibrate();
@@ -63,17 +85,14 @@ void loop() {
 
   //1600 is max in X-dir
   //1800 is max in Y-dir
-  //150 difference between squares
   //H8: 265, 315
-  //G8: 415, 315
-  //H7: 265, 465
   //A1: 1415, 1500
-  motorMovement(1415, 1500);
+  //motorMovement(1415, 1500);
 
-  //pieceMovement(18, 23);
+  playGame(game1);
 }
 
-
+//------------------------------------------------------------------
 void calibrate() {
   //run motors until limitY is reached
   while (digitalRead(limitY) == LOW && digitalRead(limitX) == LOW) {
@@ -110,11 +129,12 @@ void calibrate() {
   myStepper1.setCurrentPosition(0);
 }
 
+//------------------------------------------------------------------
+void moveMagnet(int x1, int y1){
+  //set current position as the zero spot
+  myStepper0.setCurrentPosition(0);
+  myStepper1.setCurrentPosition(0);
 
-
-
-
-void motorMovement(int x1, int y1){
   //Assume calibrate was alredy called
   //We only need to move down and left
 
@@ -152,18 +172,101 @@ void motorMovement(int x1, int y1){
   }
 }
 
+//------------------------------------------------------------------
+//use two coordinates: 11 for A1, 21 for B1, etc
+void pieceMoved(byte loc1, byte loc2){
 
-//use two coordinates and start at one location
-//turn on the magnet
-//go to the second location
-//turn off the magnet
-void pieceMovement(byte loc1, byte loc2){
- unsigned loc1_2 = (loc1 / 1U) % 10;
- unsigned loc1_1  = (loc1 / 10U) % 10;
- unsigned loc2_2 = (loc2 / 1U) % 10;
- unsigned loc2_1  = (loc2 / 10U) % 10;
+ //calculate loc1
+ unsigned loc1_1  = 8 - ((loc1 / 10U) % 10);
+ unsigned loc1_2 = 8 - ((loc1 / 1U) % 10);
+ //calculate loc2
+ unsigned loc2_1  = 8 - ((loc2 / 10U) % 10);
+ unsigned loc2_2 = 8 - ((loc2 / 1U) % 10);
 
- 
+ //start at position H8
+ moveMagnet(pos_H8[0], pos_H8[1]);
+ //move to loc1
+ moveMagnet(tile_size * loc1_1, tile_size * loc1_2);
 
+ //turn on magnet
+ digitalWrite(magnet, HIGH);
+
+ //move to loc2
+ //offset to bottom left corner
+ moveMagnet(boundary_offset, boundary_offset);
+ //complete x movement
+ moveMagnet(tile_size * (loc1_1 - loc2_1), 0);
+ //complete y movement
+ moveMagnet(0, tile_size * (loc1_2 - loc2_2));
+ //undo the offset
+ moveMagnet(-boundary_offset, -boundary_offset);
+
+ //turn off magnet
+ digitalWrite(magnet, LOW);
 }
 
+//------------------------------------------------------------------
+void pieceCaptured(bool white, byte loc){
+ //calculate loc
+ unsigned loc_x  = 8 - ((loc1 / 10U) % 10);
+ unsigned loc_y = 8 - ((loc1 / 1U) % 10);
+
+ //start at position H8
+ moveMagnet(pos_H8[0], pos_H8[1]);
+ //move to loc1
+ moveMagnet(tile_size * loc1_1, tile_size * loc1_2);
+
+ //turn on magnet
+ digitalWrite(magnet, HIGH);
+
+ //offset to bottom left corner
+ moveMagnet(boundary_offset, boundary_offset);
+ 
+ if(white){
+    if(taken_pieces_w < 8){
+        moveMagnet((tile_size * (9 - loc_x)), 0);
+        moveMagnet(0,(tile_size * (7 - loc_y - taken_pieces_w)));
+    }
+    else{
+        moveMagnet((tile_size * (8 - loc_x)), 0);
+        moveMagnet(0,(tile_size * (7 - loc_y - taken_pieces_w)));
+    }
+    taken_pieces_w = taken_pieces_w + 1;
+ }
+ else{
+    if(taken_pieces_b < 8){
+        moveMagnet((tile_size * ( -2 - loc_x)), 0);
+        moveMagnet(0,(tile_size * (7 - loc_y - taken_pieces_w)));
+    }
+    else{
+        moveMagnet((tile_size * ( -1 - loc_x)), 0);
+        moveMagnet(0,(tile_size * (7 - loc_y - taken_pieces_w)));
+    }
+    taken_pieces_b = taken_pieces_b + 1;
+ }
+}
+
+void playGame(int game[]){
+    n = length(game);
+    bool white = false;
+    for(int i = 0; i < n; i = i+2){
+        calibrate();
+        white = !white;
+        move1 = game[i];
+        move2 = game[i+1];
+
+        if(move1 > 100){
+            //first move captured piece out of the way
+            pieceCaptured(white, move2 - 100);
+            //now move piece to where captured piece was
+            pieceMoved(move1 - 100, move2 - 100);
+        }
+
+        else{
+            pieceMoved(move1, move2);
+        }
+    }
+
+    //rebuild board after game is over
+
+}
