@@ -31,15 +31,13 @@ int acceleration = 100;
 int inf = 9999;
 
 //Board global variables
-  //H8: 265, 315
-  //A1: 1415, 1500
-int pos_H8[] = {265, 315};  //corner 1
-int pos_A1[] = {1415, 1500};  //corner 2
-int board_size = pos_H8[0] - pos_A1[0];
+int pos_H8[] = {245, 285};  //corner 1
+int pos_A1[] = {1415, 1455};  //corner 2
+int board_size = pos_A1[0] - pos_H8[0];
 int tile_size = board_size / 7;
 int boundary_offset = tile_size / 2;
 int taken_pieces_w = 0;
-int taken_pices_b = 0;
+int taken_pieces_b = 0;
 
 //game array
 int game1[] = {
@@ -50,7 +48,7 @@ int game1[] = {
     41, 85,
     78, 66,
     185, 167
-}
+};
 
 
 void setup() {
@@ -85,11 +83,11 @@ void loop() {
 
   //1600 is max in X-dir
   //1800 is max in Y-dir
-  //H8: 265, 315
-  //A1: 1415, 1500
-  //motorMovement(1415, 1500);
+  //245, 275
+  //1415, 1485
 
-  playGame(game1);
+  //playGame(game1);
+  pieceMoved(88, 11);
 }
 
 //------------------------------------------------------------------
@@ -138,6 +136,7 @@ void moveMagnet(int x1, int y1){
   //Assume calibrate was alredy called
   //We only need to move down and left
 
+  
   //begin with downwards
   myStepper0.moveTo(-y1);
   myStepper1.moveTo(y1);
@@ -147,9 +146,17 @@ void moveMagnet(int x1, int y1){
   myStepper1.setSpeed(velocity);
 
   //complete the movement
-  while(myStepper0.distanceToGo() != 0 && myStepper1.distanceToGo() != 0){
-    myStepper0.runSpeed();
-    myStepper1.runSpeed();   
+  if(y1 < 0){
+    while(myStepper0.distanceToGo() < (-2 * y1) && myStepper1.distanceToGo() > (2 * y1)){
+      myStepper0.runSpeed();
+      myStepper1.runSpeed();   
+    }
+  }
+  else{
+    while(myStepper0.distanceToGo() != 0 && myStepper1.distanceToGo() != 0){
+      myStepper0.runSpeed();
+      myStepper1.runSpeed();   
+    }
   }
 
   //set current position as the zero spot
@@ -165,10 +172,18 @@ void moveMagnet(int x1, int y1){
   myStepper0.setSpeed(-velocity);
   myStepper1.setSpeed(-velocity);
 
-  //complete the movement
-  while(myStepper0.distanceToGo() != 0 && myStepper1.distanceToGo() != 0){
-    myStepper0.runSpeed();
-    myStepper1.runSpeed();   
+  //complete movemtn
+  if(x1 < 0){
+    while(myStepper0.distanceToGo() < (-2 * y1) && myStepper1.distanceToGo() > (2 * y1)){
+      myStepper0.runSpeed();
+      myStepper1.runSpeed();  
+    }
+  }
+  else{
+    while(myStepper0.distanceToGo() != 0 && myStepper1.distanceToGo() != 0){
+      myStepper0.runSpeed();
+      myStepper1.runSpeed();   
+    }
   }
 }
 
@@ -177,44 +192,67 @@ void moveMagnet(int x1, int y1){
 void pieceMoved(byte loc1, byte loc2){
 
  //calculate loc1
- unsigned loc1_1  = 8 - ((loc1 / 10U) % 10);
- unsigned loc1_2 = 8 - ((loc1 / 1U) % 10);
+ int loc1_1  = 8 - ((loc1 / 10U) % 10);
+ int loc1_2 = 8 - ((loc1 / 1U) % 10);
  //calculate loc2
- unsigned loc2_1  = 8 - ((loc2 / 10U) % 10);
- unsigned loc2_2 = 8 - ((loc2 / 1U) % 10);
+ int loc2_1  = 8 - ((loc2 / 10U) % 10);
+ int loc2_2 = 8 - ((loc2 / 1U) % 10);
 
+ Serial.print("loc1:");
+ Serial.print(loc1_1);
+ Serial.println(loc1_2);
+
+ Serial.print("loc2:");
+ Serial.print(loc2_1);
+ Serial.println(loc2_2);
+
+  Serial.print("tile size:");
+ Serial.println(tile_size);
+ 
  //start at position H8
+ Serial.println("Moving to H8");
  moveMagnet(pos_H8[0], pos_H8[1]);
  //move to loc1
+  Serial.println("Moving to loc1");
  moveMagnet(tile_size * loc1_1, tile_size * loc1_2);
-
+ 
  //turn on magnet
+  Serial.println("Magnet on");
  digitalWrite(magnet, HIGH);
 
  //move to loc2
  //offset to bottom left corner
+  Serial.println("Moving to offset");
+   Serial.println(boundary_offset);
  moveMagnet(boundary_offset, boundary_offset);
  //complete x movement
- moveMagnet(tile_size * (loc1_1 - loc2_1), 0);
+  Serial.println("Moving x loc2");
+   Serial.println(tile_size * (loc2_1 - loc1_1));
+ moveMagnet(tile_size * (loc2_1 - loc1_1), 0);
  //complete y movement
- moveMagnet(0, tile_size * (loc1_2 - loc2_2));
+  Serial.println("Moving y loc2");
+  Serial.println(tile_size * (loc2_2 - loc1_2));
+ moveMagnet(0, tile_size * (loc2_2 - loc1_2));
  //undo the offset
+  Serial.println("offset undo");
+  Serial.println(-boundary_offset);
  moveMagnet(-boundary_offset, -boundary_offset);
 
  //turn off magnet
+  Serial.println("Magnet off");
  digitalWrite(magnet, LOW);
 }
 
 //------------------------------------------------------------------
 void pieceCaptured(bool white, byte loc){
  //calculate loc
- unsigned loc_x  = 8 - ((loc1 / 10U) % 10);
- unsigned loc_y = 8 - ((loc1 / 1U) % 10);
+ unsigned loc_x  = 8 - ((loc / 10U) % 10);
+ unsigned loc_y = 8 - ((loc / 1U) % 10);
 
  //start at position H8
  moveMagnet(pos_H8[0], pos_H8[1]);
  //move to loc1
- moveMagnet(tile_size * loc1_1, tile_size * loc1_2);
+ moveMagnet(tile_size * loc_x, tile_size * loc_y);
 
  //turn on magnet
  digitalWrite(magnet, HIGH);
@@ -247,13 +285,13 @@ void pieceCaptured(bool white, byte loc){
 }
 
 void playGame(int game[]){
-    n = length(game);
+    int n = sizeof(game);
     bool white = false;
     for(int i = 0; i < n; i = i+2){
         calibrate();
         white = !white;
-        move1 = game[i];
-        move2 = game[i+1];
+        int move1 = game[i];
+        int move2 = game[i+1];
 
         if(move1 > 100){
             //first move captured piece out of the way
