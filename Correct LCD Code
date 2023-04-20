@@ -78,7 +78,16 @@ void loop() {
         lcd.clear();
         lcd.print("PLAYING");
         lcd.setCursor(0, 1);
-        lcd.print(counter);
+        if (counter == 1) {
+          lcd.print("CPU");
+        }
+        else if (counter == 2) {
+          lcd.print("IDLE");
+        }
+        else {
+          lcd.print("TRAINING");
+        }
+
         //lcd.print(modes[counter]);
 
         //GO TO GAME LOGIC HERE AND CHANGE GAME MODE COUNTER
