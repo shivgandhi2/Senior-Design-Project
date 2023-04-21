@@ -69,7 +69,6 @@ void reedPrint(){
       for (byte k = 0; k < 4; k++) {
         digitalWrite(MUX_ADDR [k], MUX_CHANNEL [j][k]);
       }
-      Serial.print("column: ");
       reed_sensor_status[column][row] = digitalRead(MUX_OUTPUT);
       row++;
       if (j == 7) {
