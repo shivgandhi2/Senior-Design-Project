@@ -1,0 +1,102 @@
+//  Chessboard
+int reed_sensor_status [8][8];
+
+//  Multiplexer
+const byte MUX_ADDR [4] = {A3, A2, A1, A0};
+//const byte MUX_SELECT [4] = {13, 9, 8, 7};
+const byte MUX_SELECT [4] = {7, 8, 9, 13};
+const byte MUX_OUTPUT (12);
+const byte MUX_CHANNEL[16][4] = {
+  {0, 0, 0, 0},
+  {1, 0, 0, 0},
+  {0, 1, 0, 0},
+  {1, 1, 0, 0},
+  {0, 0, 1, 0},
+  {1, 0, 1, 0},
+  {0, 1, 1, 0},
+  {1, 1, 1, 0},
+  {0, 0, 0, 1},
+  {1, 0, 0, 1},
+  {0, 1, 0, 1},
+  {1, 1, 0, 1},
+  {0, 0, 1, 1},
+  {1, 0, 1, 1},
+  {0, 1, 1, 1},
+  {1, 1, 1, 1}
+};
+
+
+
+void setup() {
+  Serial.begin(9600);
+
+  //  Electromagnet
+ 
+  //  Multiplexer
+  for (byte i = 0; i < 4; i++) {
+    pinMode (MUX_ADDR [i], OUTPUT);
+    digitalWrite(MUX_ADDR [i], LOW);
+    pinMode (MUX_SELECT [i], OUTPUT);
+    digitalWrite(MUX_SELECT [i], HIGH);
+  }
+  pinMode (MUX_OUTPUT, INPUT_PULLUP);
+
+  //  Set the reed switches status
+  for (byte i = 2; i < 6; i++) {
+    for (byte j = 0; j < 8; j++) {
+      reed_sensor_status[i][j] = 1;
+    }
+  }
+
+  
+}
+
+//*****************************************  LOOP
+void loop() {
+  reedPrint();     
+}
+
+//************************  PRINT REED STATUS
+
+void reedPrint(){
+    //  Record the reed switches status
+  byte column = 6;
+  byte row = 0;
+
+  for (byte i = 0; i < 4; i++) {
+    digitalWrite(MUX_SELECT[i], LOW);
+    for (byte j = 0; j < 16; j++) {
+      for (byte k = 0; k < 4; k++) {
+        digitalWrite(MUX_ADDR [k], MUX_CHANNEL [j][k]);
+      }
+      Serial.print("column: ");
+      reed_sensor_status[column][row] = digitalRead(MUX_OUTPUT);
+      row++;
+      if (j == 7) {
+        column++;
+        row = 0;
+      }
+    }
+    for (byte l = 0; l < 4; l++) {
+      digitalWrite(MUX_SELECT[l], HIGH);
+    }
+    if (i == 0) column = 4;
+    if (i == 1) column = 2;
+    if (i == 2) column = 0;
+    row = 0;
+  }
+
+  delay(1000);
+    //  print reed switches status
+  for (byte i = 0; i < 8; i++) {
+    for (byte j = 0; j < 8; j++) {
+      Serial.print(reed_sensor_status[i][j]);
+    }
+    Serial.println(" ");
+  }
+  
+  Serial.println(" ");
+  Serial.println(" ");
+
+
+}
