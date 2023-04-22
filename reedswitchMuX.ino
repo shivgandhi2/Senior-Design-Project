@@ -7,7 +7,7 @@ void loop() {
   // put your main code here, to run repeatedly:
 //Physical Reed Array
 int reed_status [8][8]; //Holds logic value for each reed switch (row,column)
-int mux_values[4][16];
+int mux_values[4][16]; // 4 rows for multiplexers, 16 channels (TEMPORARY)
 //Arduino Pins
 const byte MUX_ADDR [4] = {A3, A2, A1, A0}; // I/O pins (represent binary)
 const byte MUX_SELECT [4] = {7, 8, 9, 13}; //Enable Pins (digital pins on arduino)
@@ -67,17 +67,18 @@ void reedPrint(){
         digitalWrite(MUX_ADDR [k], MUX_CHANNEL [j][k]); //Configuing binary address for current j channel
       }
 
-      int test = digitalRead(MUX_OUTPUT);
+      int test = digitalRead(MUX_OUTPUT); // Obtains current reed switch value
      
-      mux_values[i][j] = test;
+      mux_values[i][j] = test; //Stores value in temp. array for later 
       
 
     }
    
-    initMux();
+    initMux(); //Resets mux for next iteration
     delay(1000);
     
   }
+  initMux();
   
   for (int a = 0; a < 16; a++) {  //Channels to read or write to on currently enabled mux board  
        Serial.print("Channel: ");
