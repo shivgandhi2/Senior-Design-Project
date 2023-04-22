@@ -1,0 +1,137 @@
+#include <LiquidCrystal.h>
+#include <OneWire.h> //downloaded
+
+///////////////////////////////////////
+#define ONE_WIRE_BUS 2 //DALLAS WIRE TEMP
+#define joyY A0
+#define BUTTON 7 //Switch
+#define maxLength 12
+///////////////////////////////////////
+
+// initialize the library by associating any needed LCD interface pin
+// with the Arduino pin number it is connected to
+const int rs = 12, en = 11, d4 = 5, d5 = 4, d6 = 3, d7 = 2;
+LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
+int yValue;
+int mode = 1;
+int piece = 0;
+int counter = 0;
+char *modes[] = {"CPU", "IDLE", "TRAINING"};
+char *pieces[] = {"PAWN", "BISHOP", "KNIGHT", "ROOK", "QUEEN", "KING"};
+int test = 0;
+
+
+
+int buttonState;            // the current reading from the input pin
+int lastButtonState = LOW;
+unsigned long lastDebounceTime = 0;  // the last time the output pin was toggled
+unsigned long debounceDelay = 50;    // the debounce time; increase if the output flickers
+
+void setup() {
+  Serial.begin(9600);
+  lcd.begin(16, 2);
+  lcd.clear();
+  lcd.print ("SHOCK CHESS");
+  lcd.setCursor(0, 1);
+  lcd.print("Push Button");
+  pinMode(BUTTON, INPUT);
+  Serial.println(modes[2]);
+
+
+}
+void loop() {
+
+  Serial.println(modes[test]);
+
+  if (digitalRead(BUTTON) == HIGH)
+  {
+    lcd.clear();
+    delay(200);
+    lcd.setCursor(0, 0);
+    lcd.print ("Game Mode:");
+    lcd.setCursor(0, 1);
+    lcd.print(modes[counter]);
+
+    while (mode > 0)
+    {
+      // lcd.setCursor(0, 0);
+      //lcd.print ("Game Mode:");
+      yValue = analogRead(joyY);
+      if (yValue < 490 || yValue > 525)
+      {
+        lcd.setCursor(0, 1);
+        lcd.print(modes[counter]);
+        counter++;
+        if (counter == 4)
+        {
+          counter = 0;
+          lcd.print ("                ");
+          lcd.setCursor(0, 1);
+          lcd.print(modes[counter]);
+
+          continue;
+        }
+        delay(300);
+      }
+      //char selected[14] = "";
+      if (digitalRead(BUTTON) == HIGH)
+      {
+
+        lcd.clear();
+        lcd.print("PLAYING");
+        lcd.setCursor(0, 1);
+        if (counter == 1) {
+          lcd.print("CPU");
+        }
+        else if (counter == 2) {
+          lcd.print("IDLE");
+        }
+        else {
+          //lcd.print("TRAINING");
+          lcd.clear();
+          training();
+        }
+
+        //lcd.print(modes[counter]);
+
+        //GO TO GAME LOGIC HERE AND CHANGE GAME MODE COUNTER
+
+
+
+      }
+    }
+
+  }
+}
+
+void training()
+{
+  while (digitalRead(BUTTON) == HIGH)
+  {
+    lcd.setCursor(0, 1);
+    lcd.print("CPU Turn");
+    delay(2000);
+    lcd.clear();
+    while (piece < 6)
+    {
+      //lcd.print("Move: ");
+      lcd.setCursor(0, 0);
+      lcd.print(pieces[piece]);
+      lcd.print ("             ");
+      delay(500);
+      //lcd.clear();
+      piece++;
+      if (piece == 6)
+        {
+          piece = 0;
+          lcd.print ("                ");
+          lcd.setCursor(0, 1);
+          lcd.print(pieces[piece]);
+          lcd.clear();
+          continue;
+        }
+        delay(300);
+    }
+    
+  }
+}
