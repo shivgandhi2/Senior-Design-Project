@@ -106,22 +106,32 @@ void loop() {
 
 void training()
 {
-  while (digitalRead(BUTTON) == HIGH)
+  if (digitalRead(BUTTON) == HIGH)
   {
-    lcd.setCursor(0, 1);
-    lcd.print("CPU Turn");
-    delay(2000);
     lcd.clear();
-    while (piece < 6)
+    lcd.setCursor(0, 0);
+    lcd.print("CPU Turn");
+    delay(4000);
+    lcd.print ("             ");
+    digitalWrite(BUTTON, LOW);
+    while (digitalRead(BUTTON) == LOW)
     {
-      //lcd.print("Move: ");
-      lcd.setCursor(0, 0);
-      lcd.print(pieces[piece]);
-      lcd.print ("             ");
-      delay(500);
-      //lcd.clear();
-      piece++;
-      if (piece == 6)
+      while (piece < 6)
+      {
+        if (digitalRead(BUTTON) == HIGH)
+        {
+          break;
+        }
+        //lcd.clear();
+        //delay(200);
+        //lcd.print("Move: ");
+        lcd.setCursor(0, 0);
+        lcd.print(pieces[piece]);
+        lcd.print ("             ");
+        delay(500);
+        //lcd.clear();
+        piece++;
+        if (piece == 6)
         {
           piece = 0;
           lcd.print ("                ");
@@ -131,7 +141,10 @@ void training()
           continue;
         }
         delay(300);
+        
+      }
+
     }
-    
+
   }
 }
