@@ -126,8 +126,13 @@ void training()
         //delay(200);
         //lcd.print("Move: ");
         lcd.setCursor(0, 0);
+        lcd.print("Move: ");
         lcd.print(pieces[piece]);
         lcd.print ("             ");
+        lcd.setCursor(0, 1);
+        lcd.print("To: ");
+        
+        
         delay(500);
         //lcd.clear();
         piece++;
