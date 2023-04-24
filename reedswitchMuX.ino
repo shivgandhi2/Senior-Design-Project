@@ -1,10 +1,4 @@
-void setup() {
-  // put your setup code here, to run once:
 
-}
-
-void loop() {
-  // put your main code here, to run repeatedly:
 //Physical Reed Array
 int reed_status [8][8]; //Holds logic value for each reed switch (row,column)
 int mux_values[4][16]; // 4 rows for multiplexers, 16 channels (TEMPORARY)
@@ -78,7 +72,19 @@ void reedPrint(){
     delay(1000);
     
   }
-  initMux();
+  
+  initMux(); //Maybe get rid of function and just do digitalWrite(MUX_ADDR [i], LOW);?
+  
+  //HARDCODE
+  // digitalWrite(MUX_SELECT[0], LOW);
+// digitalWrite(MUX_ADDR [0], 0);
+// digitalWrite(MUX_ADDR [1],0);
+// digitalWrite(MUX_ADDR [2], 0);
+// digitalWrite(MUX_ADDR [3], 0);
+// int test = digitalRead(MUX_OUTPUT);
+// Serial.println(test);
+// delay(1000);
+  
   
   for (int a = 0; a < 16; a++) {  //Channels to read or write to on currently enabled mux board  
        Serial.print("Channel: ");
