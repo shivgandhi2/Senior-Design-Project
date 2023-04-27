@@ -84,7 +84,21 @@ void reedPrint() {
   while (sel < 4)
   {
     digitalWrite(MUX_SELECT[sel], LOW);
-    
+    digitalWrite(MUX_ADDR[0], pin0);
+    digitalWrite(MUX_ADDR[1], pin1);
+    digitalWrite(MUX_ADDR[2], pin2);
+    digitalWrite(MUX_ADDR[3], pin3);
+    int test = digitalRead(MUX_OUTPUT);
+    if (test == 0)
+    {
+      sum++;
+    }
+    Serial.print("Channel: ");
+    Serial.print(sum);
+    Serial.print(" = ");
+    Serial.print(test);
+    Serial.println(" ");
+    delay(1000);
     if (sum == 16)
     {
       sel++;
@@ -138,21 +152,7 @@ void reedPrint() {
     {
       pin0, pin1, pin2, pin3 = 0;
     }
-    digitalWrite(MUX_ADDR[0], pin0);
-    digitalWrite(MUX_ADDR[1], pin1);
-    digitalWrite(MUX_ADDR[2], pin2);
-    digitalWrite(MUX_ADDR[3], pin3);
-    int test = digitalRead(MUX_OUTPUT);
-    if (test == 0)
-    {
-      sum++;
-    }
-    Serial.print("Channel: ");
-    Serial.print(sum);
-    Serial.print(" = ");
-    Serial.print(test);
-    Serial.println(" ");
-    delay(1000);
+    
   }
 
 
