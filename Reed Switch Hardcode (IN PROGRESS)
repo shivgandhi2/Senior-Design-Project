@@ -1,0 +1,204 @@
+
+//Physical Reed Array
+int reed_status [8][8]; //Holds logic value for each reed switch (row,column)
+int mux_values[4][16]; // 4 rows for multiplexers, 16 channels (TEMPORARY)
+//Arduino Pins
+const byte MUX_ADDR [4] = {A3, A2, A1, A0}; // I/O pins (represent binary)
+const byte MUX_SELECT [4] = {7, 8, 9, 13}; //Enable Pins (digital pins on arduino)
+
+
+const int MUX_OUTPUT = 12; //Sig Pin (reed output)
+const byte MUX_CHANNEL[16][4] = {
+  {0, 0, 0, 0},
+  {0, 0, 0, 1},
+  {0, 0, 1, 0},
+  {0, 0, 1, 1},
+  {0, 1, 0, 0},
+  {0, 1, 0, 1},
+  {0, 1, 1, 0},
+  {0, 1, 1, 1},
+  {1, 0, 0, 0},
+  {1, 0, 0, 1},
+  {1, 0, 1, 0},
+  {1, 0, 1, 1},
+  {1, 1, 0, 0},
+  {1, 1, 0, 1},
+  {1, 1, 1, 0},
+  {1, 1, 1, 1}
+};
+
+
+
+
+void setup() {
+  Serial.begin(9600);
+
+  //Initializing Mux board to be off
+  initMux();
+
+  pinMode(MUX_OUTPUT, INPUT_PULLUP); //No signal-> default 5v value
+
+  //Initalizing Reed Logic Array
+  for (byte i = 0; i < 7; i++) {
+    for (byte j = 0; j < 7; j++) {
+      reed_status[i][j] = 1; //setting a default value to 5v (Magnet to reedswtich closes circuit to GND)
+    }
+  }
+
+}
+
+void loop() {
+  reedPrint();
+}
+
+
+
+void reedPrint() {
+  /**
+    for (byte i = 0; i < 4; i++) {
+      digitalWrite(MUX_SELECT[i], LOW); //Selecting mux board to enable (Enable = 0 ->Enable mux board)
+      for (int j = 0; j < 16; j++) {  //Channels to read or write to on currently enabled mux board
+        for (byte k = 0; k < 4; k++) {
+          digitalWrite(MUX_ADDR [k], MUX_CHANNEL [j][k]); //Configuing binary address for current j channel
+        }
+
+        int test = digitalRead(MUX_OUTPUT); // Obtains current reed switch value
+
+        mux_values[i][j] = test; //Stores value in temp. array for later
+
+
+      }
+
+      initMux(); //Resets mux for next iteration
+      delay(1000);
+
+    }
+
+    initMux(); //Maybe get rid of function and just do digitalWrite(MUX_ADDR [i], LOW);?
+  **/
+  //HARDCODE
+  int sum = 0;
+  int sel = 0;
+  int pin0, pin1, pin2, pin3 = 0;
+
+  while (sel < 4)
+  {
+    digitalWrite(MUX_SELECT[sel], LOW);
+    
+    if (sum == 16)
+    {
+      sel++;
+      sum = 0;
+    } else if (sum == 1)
+    {
+      pin3 = 1;
+    } else if (sum == 2)
+    {
+      pin2 = 1;
+    } else if (sum == 3)
+    {
+      pin2, pin3 = 1;
+    } else if (sum == 4)
+    {
+      pin1 = 1;
+    } else if (sum == 5)
+    {
+      pin1, pin3 = 1;
+    } else if (sum == 6)
+    {
+      pin1, pin2 = 1;
+    } else if (sum == 7)
+    {
+      pin1, pin2, pin3 = 1;
+    } else if (sum == 8)
+    {
+      pin0 = 1;
+    } else if (sum == 9)
+    {
+      pin0, pin3 = 1;
+    } else if (sum == 10)
+    {
+      pin0, pin2 = 1;
+    } else if (sum == 11)
+    {
+      pin0, pin2, pin3 = 1;
+    } else if (sum == 12)
+    {
+      pin0, pin1 = 1;
+    } else if (sum == 13)
+    {
+      pin0, pin1, pin3 = 1;
+    } else if (sum == 14)
+    {
+      pin0, pin1, pin2 = 1;
+    } else if (sum == 15)
+    {
+      pin0, pin1, pin2, pin3 = 1;
+    } else
+    {
+      pin0, pin1, pin2, pin3 = 0;
+    }
+    digitalWrite(MUX_ADDR[0], pin0);
+    digitalWrite(MUX_ADDR[1], pin1);
+    digitalWrite(MUX_ADDR[2], pin2);
+    digitalWrite(MUX_ADDR[3], pin3);
+    int test = digitalRead(MUX_OUTPUT);
+    if (test == 0)
+    {
+      sum++;
+    }
+    Serial.print("Channel: ");
+    Serial.print(sum);
+    Serial.print(" = ");
+    Serial.print(test);
+    Serial.println(" ");
+    delay(1000);
+  }
+
+
+  /**
+    for (int a = 0; a < 16; a++) {  //Channels to read or write to on currently enabled mux board
+         Serial.print("Channel: ");
+          Serial.print(a);
+          Serial.print("-> ");
+        for (byte b = 0; b < 4; b++) {
+
+          Serial.print(mux_values[b][a]);
+          Serial.print(" ");
+
+        }
+        Serial.println("");
+
+    }
+      Serial.println("-----------------");
+        delay(1000);
+  **/
+
+
+}
+
+void initMux() {
+
+  for (byte i = 0; i < 4; i++) {
+    pinMode (MUX_ADDR [i], OUTPUT);
+    digitalWrite(MUX_ADDR [i], LOW); //Set all I/O pins to 0 logic
+    pinMode (MUX_SELECT [i], OUTPUT);
+    digitalWrite(MUX_SELECT [i], HIGH); //Disabling each mux board (E = 1 ->Mux board is off)
+  }
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//}
