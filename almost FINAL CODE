@@ -1,0 +1,405 @@
+#include <AccelStepper.h>
+#include <MultiStepper.h>
+#include <Stepper.h>
+
+
+// Define pin connections
+const int limitX = 11;
+const int limitY = 10;
+const int magnet = 12;
+
+
+
+// Creates an instance of motor objects
+AccelStepper myStepper0(AccelStepper::FULL4WIRE, 2, 3, 4, 5);
+AccelStepper myStepper1(AccelStepper::FULL4WIRE, 6, 7, 8, 9);
+
+
+//motor global variables
+int maxVelocity = 1000;
+int velocity = 500;
+int acceleration = 100;
+int inf = 9999;
+
+char reader = -1;
+
+
+//Board global variables
+int pos_H8[] = {95, 425};  //corner 1
+int pos_A1[] = {1475, 1800};  //corner 2
+int board_size = pos_A1[0] - pos_H8[0];
+int tile_size = board_size / 7;
+int boundary_offset = tile_size / 2;
+int taken_pieces_w = 0;
+int taken_pieces_b = 0;
+
+//game array
+const int game1[] = {
+  52, 54,
+  57, 55,
+  61, 34,
+  28, 36,
+  41, 85,
+  78, 66,
+  185, 167
+};
+const int game1Moves = 7;
+
+const int game2[] = {
+  52, 54,
+  57, 56,
+  42, 44,
+  47, 45,
+  21, 33,
+  145, 154,
+  133, 154,
+  28, 47,
+  71, 63,
+  68, 57,
+  61, 43,
+  78, 66,
+  01, 01,
+  27, 26,
+  63, 55,
+  38, 27,
+  41, 63,
+  18, 28,
+  154, 166,
+  157, 166,
+  55, 36,
+  01,01,
+  63, 83
+  
+};
+const int game2Moves = 23;
+
+const int game3[] = {
+  52, 54,
+  57, 55,
+  62, 64,
+  67, 65,
+  154, 165,
+  55,54,
+  41, 85,
+  77, 76,
+  165, 176,
+  87, 86,
+  76, 77,
+  58, 57,
+  85, 55,
+  57, 67,
+  177, 188
+};
+const int game3Moves = 15;
+
+const int game4[] = {
+  52, 54,
+  57, 55,
+  51, 52,
+  28, 36,
+  21, 33,
+  36, 44,
+  52, 43,
+  37, 36,
+  71, 63,
+  67, 66,
+  163, 144,
+  155, 144,
+  143, 144,
+  36, 35,
+  44, 53,
+  66, 65,
+  53, 52,
+  165, 154,
+  133, 154,
+  27, 26,
+  42, 43,
+  78, 57,
+  31, 75,
+  87, 86,
+  54, 46
+};
+const int game4Moves = 25;
+
+int num_captured = 9;
+
+void setup() {
+
+  Serial.begin(9600);
+
+  pinMode(limitX, INPUT);
+  pinMode(limitY, INPUT);
+  pinMode(magnet, OUTPUT);
+
+
+  //myStepper0.moveTo(inf);
+  myStepper0.setMaxSpeed(maxVelocity);
+  myStepper0.setSpeed(velocity);
+  myStepper0.setAcceleration(acceleration);
+
+  //myStepper1.moveTo(inf);
+  myStepper1.setMaxSpeed(maxVelocity);
+  myStepper1.setSpeed(velocity);
+  myStepper1.setAcceleration(acceleration);
+
+  calibrate();
+
+}
+
+void loop() {
+  delay(100);
+  calibrate();
+  delay(100);
+  
+  if(Serial.available()){
+    
+    reader = Serial.read();
+    if (reader == '1'){
+      //this is idle mode
+      playGame(game1, game1Moves);
+      calibrate();
+      playGame(game2, game2Moves);
+      calibrate();
+      playGame(game3, game3Moves);
+      calibrate();
+      playGame(game4, game4Moves);
+      calibrate();
+      
+    }
+    else if (reader == '2'){
+      //shiv
+      playGame(game2, game2Moves);
+    }
+    else if (reader == '3'){
+      //noah
+      playGame(game3, game3Moves);
+    }
+    else if (reader == '4'){
+      //ryan
+      playGame(game4, game4Moves);
+    }
+    else if (reader == '5'){
+      //weston
+      playGame(game1, game1Moves);
+    }
+  }
+  reader = -1;
+}
+
+//------------------------------------------------------------------
+void calibrate() {
+  //moveMagnet(40, 0);
+  //run motors until limitY is reached
+  while (digitalRead(limitY) == LOW && digitalRead(limitX) == LOW) {
+    //set motors move location
+    myStepper0.moveTo(-inf);
+    myStepper1.moveTo(-inf);
+
+    //set motors to move upwards up direction
+    myStepper0.setSpeed(-velocity);
+    myStepper1.setSpeed(-velocity);
+
+    myStepper0.runSpeed();
+    myStepper1.runSpeed();
+  }
+
+  delay(10);
+
+  //run motors until limitX is reached
+  while (digitalRead(limitX) == LOW) {
+    //set motors move location
+    myStepper0.moveTo(-inf);
+    myStepper1.moveTo(inf);
+
+    //set motors to move upwards up direction
+    myStepper0.setSpeed(-velocity);
+    myStepper1.setSpeed(velocity);
+
+    myStepper0.runSpeed();
+    myStepper1.runSpeed();
+  }
+
+  //set current position as the zero spot
+  myStepper0.setCurrentPosition(0);
+  myStepper1.setCurrentPosition(0);
+}
+
+//------------------------------------------------------------------
+void moveMagnet(int x1, int y1) {
+  //set current position as the zero spot
+  myStepper0.setCurrentPosition(0);
+  myStepper1.setCurrentPosition(0);
+
+  //determine if y direction was up or down (+ = down)
+  if (y1 >= 0) {
+    //begin with downwards
+    myStepper0.moveTo(y1);
+    myStepper1.moveTo(y1);
+
+    //set motors to move right direction
+    myStepper0.setSpeed(velocity);
+    myStepper1.setSpeed(velocity);
+  }
+  else {
+    //up direction
+    myStepper0.moveTo(y1);
+    myStepper1.moveTo(y1);
+
+    //set motors to move right direction
+    myStepper0.setSpeed(-velocity);
+    myStepper1.setSpeed(-velocity);
+  }
+
+  //complete the movement
+  while (myStepper0.distanceToGo() != 0 && myStepper1.distanceToGo() != 0) {
+    myStepper0.runSpeed();
+    myStepper1.runSpeed();
+  }
+
+  //set current position as the zero spot
+  myStepper0.setCurrentPosition(0);
+  myStepper1.setCurrentPosition(0);
+
+  if (x1 >= 0) {
+    //now go left
+    myStepper0.moveTo(x1);
+    myStepper1.moveTo(-x1);
+
+    //set motors to move left direction
+    myStepper0.setSpeed(velocity);
+    myStepper1.setSpeed(-velocity);
+  }
+  else {
+    //now go right
+    myStepper0.moveTo(x1);
+    myStepper1.moveTo(-x1);
+
+    //set motors to move right direction
+    myStepper0.setSpeed(-velocity);
+    myStepper1.setSpeed(velocity);
+  }
+
+
+  //complete the movement
+  while (myStepper0.distanceToGo() != 0 && myStepper1.distanceToGo() != 0) {
+    myStepper0.runSpeed();
+    myStepper1.runSpeed();
+  }
+}
+
+//------------------------------------------------------------------
+//use two coordinates: 11 for A1, 21 for B1, etc
+//for captures: 19 - 89 & 99 - 169
+void pieceMoved(byte loc1, byte loc2) {
+  
+  //calculate loc1
+  int loc1_1  = 8 - ((loc1 / 10U) % 10);
+  int loc1_2 = 8 - ((loc1 / 1U) % 10);
+  //calculate loc2
+  int loc2_1  = 8 - ((loc2 / 10U) % 10);
+  int loc2_2 = 8 - ((loc2 / 1U) % 10);
+
+  if(loc2 >= 99){
+    loc2_1 = (loc2 % 10) - 8;
+    loc2_2 = 10;
+  }
+  if(loc1 >= 99){
+    loc1_1 = (loc1 % 10) - 8;
+    loc2_2 = 10;
+  }
+
+  //start at position H8
+  moveMagnet(pos_H8[0], pos_H8[1]);
+  //move to loc1
+  moveMagnet(tile_size * loc1_1, tile_size * loc1_2);
+
+  //turn on magnet
+  digitalWrite(magnet, HIGH);
+  delay(100);
+
+  //move to loc2
+  //offset to bottom left corner
+  moveMagnet(-boundary_offset, -boundary_offset);
+  //complete x movement
+  moveMagnet(tile_size * (loc2_1 - loc1_1), 0);
+  //complete y movement
+  moveMagnet(0, tile_size * (loc2_2 - loc1_2));
+  //undo the offset
+  moveMagnet(boundary_offset, boundary_offset);
+
+  //turn off magnet
+  digitalWrite(magnet, LOW);
+  delay(100);
+}
+
+//------------------------------------------------------------------
+
+void playGame(int game[], int moves) {
+  //variable to keep track of number of captured pieces
+  num_captured = 9;
+  
+  for (int i = 0; i < (moves); i = i + 1) {
+    calibrate();
+    int move1 = game[2 * i];
+    int move2 = game[(2 * i) + 1];
+    if(move1 < 5){
+      if(move1 == 1){
+        pieceMoved(51, 71);
+        calibrate();
+        pieceMoved(81, 61);
+      }
+      else if(move1 == 2){
+        pieceMoved(51, 31);
+        calibrate();
+        pieceMoved(11, 41);
+      }
+      else if(move1 == 3){
+        pieceMoved(58, 78);
+        calibrate();
+        pieceMoved(88, 68);
+      }
+      else{
+        pieceMoved(58, 38);
+        calibrate();
+        pieceMoved(18, 48);
+      }
+    }
+    else if (move1 >= 100) {
+      num_captured = num_captured + 10;
+      //first move captured piece away
+      pieceMoved(move2 - 100, num_captured);
+      calibrate();
+      pieceMoved(move1 - 100, move2 - 100);
+      
+    }
+    else {
+      pieceMoved(move1, move2);
+    }
+
+
+  }
+  //game over!!
+  Serial.write('1');
+  delay(5000);
+  //rebuild board after game is over
+  reverseGame(game, moves);
+}
+
+void reverseGame(int game[], int moves){
+  for (int i = moves - 1; i >= 0; i = i - 1) {
+    calibrate();
+    int move1 = game[2 * i];
+    int move2 = game[(2 * i) + 1];
+
+    if (move1 >= 100) {
+      //first move captured piece away
+      pieceMoved(move2 - 100, move1 - 100);
+      calibrate();
+      pieceMoved(num_captured, move2 - 100);
+      num_captured = num_captured - 10;      
+    }
+    else {
+      pieceMoved(move2, move1);
+    }
+  }
+}
