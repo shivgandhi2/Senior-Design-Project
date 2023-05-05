@@ -108,6 +108,8 @@ void loop() {
           lcd.setCursor(0, 1);
           lcd.print("IDLE MODE");
           Serial.write('1');
+          delay(1000);
+          resetFunc();
           //break;
         }
         else if (counter == 2) {
@@ -197,16 +199,24 @@ void iconic()
       if (counter1 < 2) {
         lcd.print("SHIV'S GAME");
         Serial.write('2');
+        delay(1000);
+        resetFunc();
       }
       else if (counter1 == 2) {
         lcd.print("NOAH'S GAME");
         Serial.write('3');
+        delay(1000);
+        resetFunc();
       } else if (counter1 == 3) {
         lcd.print("RYAN'S GAME");
         Serial.write('4');
+        delay(1000);
+        resetFunc();
       } else {
         lcd.print("WESTON'S GAME");
         Serial.write('5');
+        delay(1000);
+        resetFunc();
 
         //lcd.clear();
         //training();
