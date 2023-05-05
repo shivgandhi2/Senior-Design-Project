@@ -151,9 +151,9 @@ void loop() {
   calibrate();
   delay(100);
   
-  if(Serial.available()){
-    
+  while(Serial.available()){
     reader = Serial.read();
+  }
     if (reader == '1'){
       //this is idle mode
       playGame(game1, game1Moves);
@@ -179,10 +179,9 @@ void loop() {
       playGame(game4, game4Moves);
     }
     else if (reader == '5'){
-      //weston
+      //stalemate  
       playGame(game1, game1Moves);
     }
-  }
   reader = -1;
 }
 
