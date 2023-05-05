@@ -1,0 +1,212 @@
+#include <LiquidCrystal.h>
+#include <OneWire.h> //downloaded
+
+///////////////////////////////////////
+#define ONE_WIRE_BUS 2 //DALLAS WIRE TEMP
+#define joyY A0
+#define BUTTON 7 //Switch
+#define maxLength 12
+///////////////////////////////////////
+
+// initialize the library by associating any needed LCD interface pin
+// with the Arduino pin number it is connected to
+const int rs = 12, en = 11, d4 = 5, d5 = 4, d6 = 3, d7 = 2;
+LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
+int yValue;
+int mode = 1;
+int game = 1;
+int piece = 0;
+int counter = 0;
+int counter1 = 0;
+char *modes[] = {"IDLE", "TRAINING", "ICONIC MATCH"};
+char *famous[] = {"SHIV'S GAME", "NOAH'S GAME", "RYAN'S GAME", "WESTON'S GAME"};
+int test = 0;
+//int resets = 9;
+char reader;
+
+int buttonState;            // the current reading from the input pin
+int lastButtonState = LOW;
+unsigned long lastDebounceTime = 0;  // the last time the output pin was toggled
+unsigned long debounceDelay = 50;    // the debounce time; increase if the output flickers
+
+void(* resetFunc) (void) = 0;
+
+void setup() {
+  // digitalWrite(resets, LOW);
+  Serial.begin(9600);
+  lcd.begin(16, 2);
+  lcd.clear();
+  lcd.print ("SHOCK CHESS");
+  lcd.setCursor(0, 1);
+  lcd.print("Push Button");
+  pinMode(BUTTON, INPUT);
+  //pinMode(resets, OUTPUT);
+  //Serial.println(modes[2]);
+
+
+}
+void loop() {
+
+  //Serial.println(modes[test]);
+  if (Serial.available()) {
+    reader = Serial.read();
+    if (reader == '1')
+    {
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("GAME OVER!");
+      delay(5000);
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Resetting Board");
+      delay(10000);
+      resetFunc();
+    }
+  }
+  if (digitalRead(BUTTON) == HIGH)
+  {
+    delay(100);
+    digitalWrite(BUTTON, LOW);
+    //while (digitalRead(BUTTON) == LOW)
+    //{
+    lcd.clear();
+    delay(200);
+    lcd.setCursor(0, 0);
+    lcd.print ("Game Mode:");
+    lcd.setCursor(0, 1);
+    lcd.print(modes[counter]);
+
+    while (mode > 0)
+    {
+      lcd.setCursor(0, 0);
+      lcd.print ("GAME MODE:");
+      yValue = analogRead(joyY);
+      if (yValue < 490 || yValue > 525)
+      {
+        lcd.setCursor(0, 1);
+        lcd.print(modes[counter]);
+        counter++;
+        if (counter == 4)
+        {
+          counter = 0;
+          lcd.print ("                ");
+          lcd.setCursor(0, 1);
+          lcd.print(modes[counter]);
+
+          continue;
+        }
+        delay(300);
+      }
+      //char selected[14] = "";
+      if (digitalRead(BUTTON) == HIGH)
+      {
+        lcd.clear();
+        lcd.setCursor(0, 0);
+        if (counter < 2) {
+          //lcd.clear();
+          lcd.clear();
+          lcd.setCursor(0, 1);
+          lcd.print("IDLE MODE");
+          Serial.write('1');
+          //break;
+        }
+        else if (counter == 2) {
+          //lcd.clear();
+          lcd.clear();
+          lcd.setCursor(0, 1);
+          lcd.print("COMING SOON!");
+          // Serial.write('2');
+          //break;
+        }
+        else {
+          lcd.print("ICONIC");
+          lcd.clear();
+          //Serial.write('3');
+          iconic();
+          //break;
+        }
+      }
+
+
+      //lcd.print(modes[counter]);
+
+      //GO TO GAME LOGIC HERE AND CHANGE GAME MODE COUNTER
+
+
+
+    }
+    //}
+
+  }
+}
+
+void iconic()
+{
+  //if (digitalRead(BUTTON) == HIGH)
+  //{
+  delay(100);
+  digitalWrite(BUTTON, LOW);
+  lcd.clear();
+  delay(200);
+  lcd.setCursor(0, 0);
+  lcd.print ("CHOOSE GAME:");
+  lcd.setCursor(0, 1);
+  //lcd.print ("                ");
+  lcd.print(famous[counter1]);
+
+  while (game > 0)
+  {
+    // lcd.setCursor(0, 0);
+    //lcd.print ("Game Mode:");
+    yValue = analogRead(joyY);
+    if (yValue < 490 || yValue > 525)
+    {
+      lcd.setCursor(0, 1);
+      lcd.print(famous[counter1]);
+      counter1++;
+      if (counter1 == 5)
+      {
+        counter1 = 0;
+        lcd.print ("                ");
+        lcd.setCursor(0, 1);
+        lcd.print(famous[counter1]);
+
+        continue;
+      }
+      delay(300);
+    }
+    //char selected[14] = "";
+    while (digitalRead(BUTTON) == HIGH)
+    {
+      lcd.clear();
+      lcd.print("PLAYING");
+      lcd.setCursor(0, 1);
+      if (counter1 < 2) {
+        lcd.print("SHIV'S GAME");
+        Serial.write('2');
+      }
+      else if (counter1 == 2) {
+        lcd.print("NOAH'S GAME");
+        Serial.write('3');
+      } else if (counter1 == 3) {
+        lcd.print("RYAN'S GAME");
+        Serial.write('4');
+      } else {
+        lcd.print("WESTON'S GAME");
+        Serial.write('5');
+        
+        //lcd.clear();
+        //training();
+      }
+
+      //lcd.print(modes[counter]);
+
+      //GO TO GAME LOGIC HERE AND CHANGE GAME MODE COUNTER
+
+
+
+    }
+  }
+
+  //}
+}
