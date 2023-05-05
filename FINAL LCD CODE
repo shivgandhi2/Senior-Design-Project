@@ -48,7 +48,7 @@ void setup() {
 void loop() {
 
   //Serial.println(modes[test]);
-  if (Serial.available()) {
+  while (Serial.available()) {
     reader = Serial.read();
     if (reader == '1')
     {
@@ -142,8 +142,21 @@ void loop() {
 
 void iconic()
 {
-  //if (digitalRead(BUTTON) == HIGH)
-  //{
+  while (Serial.available()) {
+    reader = Serial.read();
+    if (reader == '1')
+    {
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("GAME OVER!");
+      delay(5000);
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Resetting Board");
+      delay(10000);
+      resetFunc();
+    }
+  }
   delay(100);
   digitalWrite(BUTTON, LOW);
   lcd.clear();
@@ -194,7 +207,7 @@ void iconic()
       } else {
         lcd.print("WESTON'S GAME");
         Serial.write('5');
-        
+
         //lcd.clear();
         //training();
       }
